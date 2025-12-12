@@ -102,19 +102,14 @@ export const deployFieldDifference = async (req: Request, res: Response) => {
         if (pollResult.status === 'Succeeded') {
           clearInterval(poll);
           try {
-            // try legacy deploy helper
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const legacyDeploy = require('d:/migrata/migrata-demo2/helpers/sfdc_field_difference/FieldDeploymentHelper');
             const deploymentResult = await legacyDeploy.deployfields('', null, targetOrg, targetConn, pollResult.zipFile, checkOnly);
             if (deploymentResult && deploymentResult.success) {
               try {
-                // trigger fresh diff calc using legacy helper
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
                 const legacyDiff = require('d:/migrata/migrata-demo2/helpers/sfdc_field_difference/FieldDifferenceHelper');
                 const consoleConn = await getSfdcTokenConnection(process.env.CONSOLE_ORG_DOMAIN_NAME || '');
                 let objNames: Record<string, string> = {};
                 try {
-                  // eslint-disable-next-line @typescript-eslint/no-var-requires
                   const legacyQuery = require('d:/migrata/migrata-demo2/helpers/sfdc_extid_service/DataObjectQueryService');
                   const qres = await legacyQuery.queryDataObject(consoleConn, dataScheduleId);
                   for (const r of qres.records) objNames[r.Name] = r[`${namespace}DataIdField__c`];
@@ -148,7 +143,6 @@ export const deleteFieldDifference = async (req: Request, res: Response) => {
     const { targetOrg, data } = req.body;
     if (!targetOrg || !data || !Array.isArray(data)) return res.status(400).json({ success: false, msg: 'Bad Request!' });
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const legacyDelete = require('d:/migrata/migrata-demo2/helpers/sfdc_field_difference/FieldDeleteHelper');
       const targetConn = await getSfdcTokenConnection(targetOrg);
       const result = await legacyDelete.deleteFields(targetConn, data);

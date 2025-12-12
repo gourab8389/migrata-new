@@ -13,11 +13,11 @@ interface MigrationPayload {
 
 let migrateDataRouteRunning = false;
 
-/**
- * Start data migration between orgs
- * Initiates async background process that exports data from source org,
- * stores in database, and imports to target org
- */
+
+ // Start data migration between orgs
+ // Initiates async background process that exports data from source org,
+ // stores in database, and imports to target org
+
 export const startMigration = async (req: Request, res: Response): Promise<void> => {
   try {
     if (migrateDataRouteRunning) {
@@ -143,9 +143,7 @@ export const startMigration = async (req: Request, res: Response): Promise<void>
   }
 };
 
-/**
- * Get current migration status and progress
- */
+// GET /api/v1/migrate-data/status
 export const getMigrationStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { dataScheduleId } = req.query;
@@ -182,11 +180,11 @@ export const getMigrationStatus = async (req: Request, res: Response): Promise<v
   }
 };
 
-/**
- * GET /api/v1/migrate-data (legacy compatibility)
- * Accepts `dataScheduleId` as query param and kicks off the same async
- * export process as the old server. Returns a resultUrl for logs.
- */
+
+ // GET /api/v1/migrate-data (legacy compatibility)
+ // Accepts `dataScheduleId` as query param and kicks off the same async
+ // export process as the old server. Returns a resultUrl for logs.
+
 export const migrate = async (req: Request, res: Response): Promise<void> => {
   try {
     if (migrateDataRouteRunning || (global as any).quickDeployRouteRunning) {

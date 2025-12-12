@@ -5,9 +5,9 @@ import prisma from '../../../config/database';
 import { getSfdcTokenConnection } from '../../../helpers/sfdc_common/SfdcTokenConnectionService';
 import { updateToken } from '../../../helpers/sfdc_common/TokenUpdateHelper';
 
-/**
- * Initiates OAuth2 authentication flow to Salesforce
- */
+
+ // Initiates OAuth2 authentication flow to Salesforce
+
 export const authenticate = async (req: Request, res: Response): Promise<void> => {
   try {
     let baseUrlProd = 'https://login.salesforce.com';
@@ -53,9 +53,8 @@ export const authenticate = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-/**
- * OAuth2 callback handler - exchanges code for tokens
- */
+ // OAuth2 callback handler - exchanges code for tokens
+
 export const callback = async (req: Request, res: Response): Promise<void> => {
   try {
     let tokenUrl = 'https://login.salesforce.com/services/oauth2/token';
@@ -154,9 +153,7 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-/**
- * Check if an org is currently authenticated and has valid tokens
- */
+  // Check authentication status for an org
 export const checkStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.query.orgName) {
@@ -207,9 +204,7 @@ export const checkStatus = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-/**
- * Revoke OAuth token for an org
- */
+// Revoke OAuth token for an org
 export const revokeAuth = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.query.orgName) {

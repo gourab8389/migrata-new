@@ -431,6 +431,3 @@ For questions or issues, refer to the documentation files in the `docs/` folder 
 
 **Built with**: Node.js | TypeScript | Express | Prisma | PostgreSQL
 
-**Version**: 2.0.0
-
-**Last Updated**: December 2025

@@ -2,9 +2,7 @@ import { Request, Response } from 'express';
 import getSfdcTokenConnection from '../../../helpers/sfdc_common/SfdcTokenConnectionService';
 import prisma from '../../../config/database';
 
-/**
- * Create migrata external ID field for console org
- */
+// Create migrata external ID field for console org
 export const createMigrataExtIdForConsoleOrg = async (
   req: Request,
   res: Response
@@ -28,9 +26,7 @@ export const createMigrataExtIdForConsoleOrg = async (
   }
 };
 
-/**
- * Create migrata external ID field
- */
+// Create migrata external ID field
 export const createMigrataExtId = async (
   req: Request,
   res: Response
@@ -56,9 +52,7 @@ export const createMigrataExtId = async (
   }
 };
 
-/**
- * Delete external ID field
- */
+// Delete migrata external ID field
 export const deleteExtIdField = async (
   req: Request,
   res: Response
@@ -84,9 +78,7 @@ export const deleteExtIdField = async (
   }
 };
 
-/**
- * Check external ID status
- */
+// Delete migrata external ID field
 export const checkExtIdStatus = async (
   req: Request,
   res: Response
@@ -114,9 +106,7 @@ export const checkExtIdStatus = async (
   }
 };
 
-/**
- * Update external ID values
- */
+// Update external ID values
 export const updateExtIdValues = async (
   req: Request,
   res: Response

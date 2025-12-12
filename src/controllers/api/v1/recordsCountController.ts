@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import prisma from '../../../config/database';
 
-/**
- * Get record counts from source and target orgs
- */
+
+ // Get record counts from source and target orgs
+
 export const getRecordCount = async (
   req: Request,
   res: Response
