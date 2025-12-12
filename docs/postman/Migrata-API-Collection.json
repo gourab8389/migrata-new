@@ -1,0 +1,402 @@
+{
+  "info": {
+    "_postman_id": "migrata-api-v2",
+    "name": "Migrata API Collection",
+    "description": "Salesforce Data Migration Tool - API Collection for Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user@example.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"dummy_refresh_token\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/refresh-token",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/auth/logout",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Migration",
+      "item": [
+        {
+          "name": "Initiate Migration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataScheduleId\": \"a15xx000000001\",\n  \"dataBatchIds\": [\"a16xx000000001\"],\n  \"test\": false\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/migrate-data",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "migrate-data"]
+            }
+          }
+        },
+        {
+          "name": "Get Migration Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/migrate-data/status/a15xx000000001",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "migrate-data", "status", "a15xx000000001"]
+            }
+          }
+        },
+        {
+          "name": "Deploy Migration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataScheduleId\": \"a15xx000000001\",\n  \"test\": false\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/migrate-data/deploy",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "migrate-data", "deploy"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Metadata",
+      "item": [
+        {
+          "name": "List Objects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/metadata/objects",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "metadata", "objects"]
+            }
+          }
+        },
+        {
+          "name": "Get Object Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/metadata/object/Account",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "metadata", "object", "Account"]
+            }
+          }
+        },
+        {
+          "name": "Describe Objects",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"objectNames\": [\"Account\", \"Contact\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/metadata/describe",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "metadata", "describe"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Records",
+      "item": [
+        {
+          "name": "Get Record Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/records-count/org001/Account",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "records-count", "org001", "Account"]
+            }
+          }
+        },
+        {
+          "name": "Count Records",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceOrgId\": \"org001\",\n  \"objectName\": \"Account\",\n  \"whereClause\": \"WHERE Status='Active'\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/records-count/count",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "records-count", "count"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permission Set",
+      "item": [
+        {
+          "name": "Assign Permission Set",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionSetName\": \"CustomPermission\",\n  \"userIds\": [\"user_id_1\", \"user_id_2\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/permission-set/assign",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "permission-set", "assign"]
+            }
+          }
+        },
+        {
+          "name": "Fetch Permission Set ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionSetName\": \"CustomPermission\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/permission-set/fetch-id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "permission-set", "fetch-id"]
+            }
+          }
+        },
+        {
+          "name": "Fetch Permission Sets List",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/permission-set/fetch-list",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "permission-set", "fetch-list"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "External ID",
+      "item": [
+        {
+          "name": "Check External ID Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orgId\": \"org001\",\n  \"objectName\": \"Account\",\n  \"extIdField\": \"ExternalId__c\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/ext-id/check-status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "ext-id", "check-status"]
+            }
+          }
+        },
+        {
+          "name": "Create External ID Field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orgId\": \"org001\",\n  \"objectName\": \"Account\",\n  \"fieldName\": \"ExternalId__c\",\n  \"label\": \"External ID\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/ext-id/create-field",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "ext-id", "create-field"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logs",
+      "item": [
+        {
+          "name": "Get Migration Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/logs/a15xx000000001",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "logs", "a15xx000000001"]
+            }
+          }
+        },
+        {
+          "name": "Get Object Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/logs/object/Account/a15xx000000001",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "v1", "logs", "object", "Account", "a15xx000000001"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "v1", "health"]
+        }
+      }
+    }
+  ]
+}

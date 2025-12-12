@@ -1,0 +1,415 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ===== CORE AUTHENTICATION & CONFIGURATION =====
+
+model RegisteredOrg {
+  id            String   @id @default(cuid())
+  domainName    String   @unique
+  instanceUrl   String   @unique
+  accessToken   String
+  refreshToken  String?
+  orgId         String?
+  userId        String?
+  userName      String?
+  userEmail     String?
+  profileId     String?
+  profileName   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations to logs and operations
+  dataMigrations        DataMigration[]
+  targetMigrations      DataMigration[] @relation("targetOrg")
+  fieldMappings         FieldMapping[]
+  migrateDataLogs       MigrateDataLog[]
+  createCustomFieldLogs CreateCustomFieldLog[]
+  updateExtIdValueLogs  UpdateExtIdValueLog[]
+  deleteCustomFieldLogs DeleteCustomFieldLog[]
+  permitLogs            PermitObjectsAndFieldsLog[]
+  recordCountLogs       RecordCountLog[]
+  fieldDiffLogs         FieldDifferenceLog[]
+  deployFieldDiffLogs   DeployFromFieldDiffLog[]
+  duplicateRecordsLogs  DuplicateRecordsLog[]
+  csvDataLogs           CsvDataLog[]
+  extraChildRecordsLogs ExtraChildRecordsLog[]
+  syncRecordsLogs       SyncRecordsLog[]
+  metadataDeployLogs    MetadataDeployLog[]
+  diffViewerLogs        DiffViewerLog[]
+  errorLogs             ErrorLog[]
+
+  @@index([domainName])
+  @@index([orgId])
+}
+
+// ===== DATA MIGRATION ORCHESTRATION =====
+
+model DataMigration {
+  id                String   @id @default(cuid())
+  dataScheduleId    String   @unique
+  status            String   @default("Pending")
+  sourceOrgId       String?
+  targetOrgId       String?
+  dataBatchId       String?
+  scheduledStartTime DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  sourceOrg      RegisteredOrg? @relation(fields: [sourceOrgId], references: [id], onDelete: SetNull)
+  targetOrg      RegisteredOrg? @relation("targetOrg", fields: [targetOrgId], references: [id], onDelete: SetNull)
+  migrationLogs  MigrationLog[]
+  objectMappings ObjectMapping[]
+
+  @@index([sourceOrgId])
+  @@index([targetOrgId])
+  @@index([status])
+  @@index([dataScheduleId])
+}
+
+model MigrationLog {
+  id              String   @id @default(cuid())
+  dataMigrationId String
+  objectName      String
+  recordCount     Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+  errorMessage    String?
+  details         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  dataMigration DataMigration @relation(fields: [dataMigrationId], references: [id], onDelete: Cascade)
+
+  @@index([dataMigrationId])
+  @@index([objectName])
+}
+
+model ObjectMapping {
+  id              String   @id @default(cuid())
+  dataMigrationId String
+  sourceObject    String
+  targetObject    String
+  fieldMappings   Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  dataMigration DataMigration @relation(fields: [dataMigrationId], references: [id], onDelete: Cascade)
+
+  @@unique([dataMigrationId, sourceObject])
+  @@index([dataMigrationId])
+}
+
+model FieldMapping {
+  id              String   @id @default(cuid())
+  registeredOrgId String
+  objectName      String
+  sourceField     String
+  targetField     String
+  fieldType       String
+  isRequired      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg @relation(fields: [registeredOrgId], references: [id], onDelete: Cascade)
+
+  @@unique([registeredOrgId, objectName, sourceField])
+  @@index([registeredOrgId])
+  @@index([objectName])
+}
+
+// ===== LOG TABLES (one per async operation type) =====
+
+model MigrateDataLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  sourceOrg       String?
+  targetOrg       String?
+  objectNames     String[] @default([])
+  batchName       String?
+  insertResult    Json     @default("{}")
+  updateResult    Json     @default("{}")
+  progress        Int      @default(0)
+  errorCount      Int      @default(0)
+  startTime       DateTime?
+  endTime         DateTime?
+  status          String   @default("Queued")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+  @@index([registeredOrgId])
+}
+
+model CreateCustomFieldLog {
+  id                   String   @id @default(cuid())
+  dataScheduleId       String   @unique
+  registeredOrgId      String?
+  consoleOrgDomainName String?
+  consoleOrgOnly       Boolean  @default(false)
+  status               String   @default("Queued")
+  result               Json     @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model UpdateExtIdValueLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  batchJobId      String?
+  status          String   @default("Queued")
+  progress        Int      @default(0)
+  result          Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([batchJobId])
+}
+
+model DeleteCustomFieldLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  status          String   @default("Queued")
+  result          Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model PermitObjectsAndFieldsLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  status          String   @default("Queued")
+  result          Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model RecordCountLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  sourceOrg       String?
+  targetOrg       String?
+  batchName       String?
+  recordCounts    Json     @default("{}")
+  status          String   @default("Queued")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model FieldDifferenceLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  sourceOrg       String?
+  targetOrg       String?
+  fieldScope      String?
+  differences     Json     @default("{}")
+  status          String   @default("Queued")
+  progress        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model DeployFromFieldDiffLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String?
+  registeredOrgId String?
+  targetOrg       String?
+  deployId        String   @unique
+  retrieveId      String?
+  status          String   @default("InProgress")
+  result          Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([deployId])
+}
+
+model DuplicateRecordsLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  sourceOrg       String?
+  targetOrg       String?
+  scope           String?
+  duplicates      Json     @default("{}")
+  status          String   @default("Queued")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model CsvDataLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  sourceOrg       String?
+  targetOrg       String?
+  csvData         Json     @default("{}")
+  status          String   @default("Queued")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model ExtraChildRecordsLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  sourceOrg       String?
+  targetOrg       String?
+  recordsToDelete Json     @default("{}")
+  status          String   @default("Queued")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model SyncRecordsLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  sourceOrg       String?
+  targetOrg       String?
+  syncedCount     Int      @default(0)
+  status          String   @default("Queued")
+  result          Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model MetadataDeployLog {
+  id                 String   @id @default(cuid())
+  dataScheduleId     String?
+  registeredOrgId    String?
+  targetOrg          String?
+  deployId           String   @unique
+  retrieveId         String?
+  status             String   @default("InProgress")
+  componentsDeployed Int      @default(0)
+  componentsTotal    Int      @default(0)
+  testsCompleted     Int      @default(0)
+  testsTotal         Int      @default(0)
+  testErrors         Int      @default(0)
+  errors             Json     @default("[]")
+  testFailures       Json     @default("[]")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([deployId])
+  @@index([status])
+}
+
+model ErrorLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String?
+  registeredOrgId String?
+  errorMessage    String?
+  errorStack      String?
+  endpoint        String?
+  context         Json?
+  createdAt       DateTime @default(now())
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([createdAt])
+  @@index([endpoint])
+}
+
+model DiffViewerLog {
+  id              String   @id @default(cuid())
+  dataScheduleId  String   @unique
+  registeredOrgId String?
+  sourceOrg       String?
+  targetOrg       String?
+  differences     Json     @default("{}") 
+  status          String   @default("Queued")
+  progress        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  registeredOrg RegisteredOrg? @relation(fields: [registeredOrgId], references: [id], onDelete: SetNull)
+
+  @@index([dataScheduleId])
+  @@index([status])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  resource  String
+  details   Json?
+  ipAddress String?
+  userId    String?
+  orgId     String?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([orgId])
+}
