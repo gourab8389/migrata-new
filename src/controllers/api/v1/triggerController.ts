@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getSfdcTokenConnection } from '../../../../src/helpers/sfdc_common/SfdcTokenConnectionService';
+import { getSfdcTokenConnection } from '../../../helpers/sfdc_common/SfdcTokenConnectionService';
 import exportScheduledData from '../../../services/sfdc/exportScheduledData';
 
 export const triggerOperation = async (req: Request, res: Response) => {

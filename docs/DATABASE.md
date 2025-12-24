@@ -1,97 +1,85 @@
-# Database Schema and Models
+# Database Schema and Models (canonical)
 
-## Overview
+This file documents the Prisma schema in `prisma/schema.prisma`. The new TypeScript server uses Prisma + PostgreSQL; the snippets below are the authoritative shapes used by the application.
 
-Migrata uses PostgreSQL with Prisma ORM for data management. This document describes all database models and their relationships.
+> Source: `prisma/schema.prisma`
 
-## Database Models
+## Key models (selected)
 
-### 1. RegisteredOrg
-
+### `RegisteredOrg`
 Stores Salesforce organization credentials and connection information.
 
-```typescript
+```prisma
 model RegisteredOrg {
-  id              String   @id @default(cuid())
-  domainName      String   @unique
-  instanceUrl     String
-  accessToken     String
-  refreshToken    String?
-  clientId        String?
-  clientSecret    String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(cuid())
+  domainName    String   @unique
+  instanceUrl   String   @unique
+  accessToken   String
+  refreshToken  String?
+  orgId         String?
+  userId        String?
+  userName      String?
+  userEmail     String?
+  profileId     String?
+  profileName   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  dataMigrations    DataMigration[]
-  fieldMappings     FieldMapping[]
-  targetMigrations  DataMigration[] @relation("targetOrg")
+  // Relations to logs and operations
+  dataMigrations        DataMigration[]
+  targetMigrations      DataMigration[] @relation("targetOrg")
+  fieldMappings         FieldMapping[]
+  migrateDataLogs       MigrateDataLog[]
+  createCustomFieldLogs CreateCustomFieldLog[]
+  updateExtIdValueLogs  UpdateExtIdValueLog[]
+  deleteCustomFieldLogs DeleteCustomFieldLog[]
+  permitLogs            PermitObjectsAndFieldsLog[]
+  recordCountLogs       RecordCountLog[]
+  fieldDiffLogs         FieldDifferenceLog[]
+  deployFieldDiffLogs   DeployFromFieldDiffLog[]
+  duplicateRecordsLogs  DuplicateRecordsLog[]
+  csvDataLogs           CsvDataLog[]
+  extraChildRecordsLogs ExtraChildRecordsLog[]
+  syncRecordsLogs       SyncRecordsLog[]
+  metadataDeployLogs    MetadataDeployLog[]
+  diffViewerLogs        DiffViewerLog[]
+  errorLogs             ErrorLog[]
+
+  @@index([domainName])
+  @@index([orgId])
 }
 ```
 
-**Use**: Store credentials for source and target Salesforce organizations
+### `DataMigration`
+Tracks migration jobs. `dataScheduleId` is unique and used widely as an external identifier.
 
-**Example**:
-```json
-{
-  "id": "cuid123",
-  "domainName": "prod.salesforce.com",
-  "instanceUrl": "https://instance.salesforce.com",
-  "accessToken": "encrypted_token",
-  "refreshToken": "refresh_token",
-  "clientId": "client_id",
-  "clientSecret": "secret"
-}
-```
-
----
-
-### 2. DataMigration
-
-Tracks individual migration jobs and their status.
-
-```typescript
+```prisma
 model DataMigration {
   id                String   @id @default(cuid())
   dataScheduleId    String   @unique
   status            String   @default("Pending")
-  sourceOrgId       String
-  targetOrgId       String
+  sourceOrgId       String?
+  targetOrgId       String?
   dataBatchId       String?
   scheduledStartTime DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  sourceOrg         RegisteredOrg @relation(fields: [sourceOrgId], references: [id])
-  targetOrg         RegisteredOrg @relation("targetOrg", fields: [targetOrgId], references: [id])
-  migrationLogs     MigrationLog[]
-  objectMappings    ObjectMapping[]
+  sourceOrg      RegisteredOrg? @relation(fields: [sourceOrgId], references: [id], onDelete: SetNull)
+  targetOrg      RegisteredOrg? @relation("targetOrg", fields: [targetOrgId], references: [id], onDelete: SetNull)
+  migrationLogs  MigrationLog[]
+  objectMappings ObjectMapping[]
+
+  @@index([sourceOrgId])
+  @@index([targetOrgId])
+  @@index([status])
+  @@index([dataScheduleId])
 }
 ```
 
-**Statuses**: Pending, InProgress, Completed, Failed, Scheduled
+### `MigrationLog` and `ObjectMapping` (selected fields)
 
-**Use**: Main table to track migrations
-
-**Example**:
-```json
-{
-  "id": "mig123",
-  "dataScheduleId": "a15xx000000001",
-  "status": "InProgress",
-  "sourceOrgId": "source_org_id",
-  "targetOrgId": "target_org_id",
-  "dataBatchId": "batch123",
-  "scheduledStartTime": "2024-12-11T10:00:00Z"
-}
-```
-
----
-
-### 3. MigrationLog
-
-Detailed logs for each object migrated in a migration.
-
-```typescript
+```prisma
 model MigrationLog {
   id              String   @id @default(cuid())
   dataMigrationId String
@@ -104,299 +92,44 @@ model MigrationLog {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  dataMigration   DataMigration @relation(fields: [dataMigrationId], references: [id], onDelete: Cascade)
+  dataMigration DataMigration @relation(fields: [dataMigrationId], references: [id], onDelete: Cascade)
 }
-```
 
-**Use**: Track migration results per object
-
-**Example**:
-```json
-{
-  "id": "log123",
-  "dataMigrationId": "mig123",
-  "objectName": "Account",
-  "recordCount": 1000,
-  "successCount": 950,
-  "failureCount": 50,
-  "errorMessage": "Some records failed",
-  "details": {
-    "failedIds": ["id1", "id2"]
-  }
-}
-```
-
----
-
-### 4. ObjectMapping
-
-Maps objects between source and target organizations.
-
-```typescript
 model ObjectMapping {
   id              String   @id @default(cuid())
   dataMigrationId String
   sourceObject    String
   targetObject    String
-  fieldMappings   Json
+  fieldMappings   Json?
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  dataMigration   DataMigration @relation(fields: [dataMigrationId], references: [id], onDelete: Cascade)
+  updatedAt       DateTime @default(now())
 }
 ```
 
-**Use**: Define how objects are mapped between orgs
+### Log models (summary)
+There are many operation-specific log models (e.g. `CreateCustomFieldLog`, `UpdateExtIdValueLog`, `FieldDifferenceLog`, `MigrateDataLog`, etc.). They commonly use `dataScheduleId` (often `@unique`) and `Json` columns for flexible nested payloads such as `result`, `differences`, `recordCounts`, etc.
 
-**Example**:
-```json
-{
-  "id": "objmap123",
-  "dataMigrationId": "mig123",
-  "sourceObject": "Account",
-  "targetObject": "Account__c",
-  "fieldMappings": {
-    "Id": "ExternalId__c",
-    "Name": "Name__c",
-    "Phone": "Phone__c"
-  }
-}
-```
+## Indexes & Uniqueness
+- Many models index `dataScheduleId` and set it `@unique` when the model represents a single async job per schedule.
+- `RegisteredOrg.domainName` and `RegisteredOrg.instanceUrl` are unique.
 
----
+## Notes for porting / compatibility
+- Mongo dotted-path updates (legacy `logCursor.updateOne(... { $set: { [`result.${org}`]: ... } })`) are implemented with JSON fields in Postgres; code performs read-modify-write or raw JSONB operations in helpers. Search for places that compute dynamic keys (``[`result.${org}`]``) when reviewing behavior.
+- Ensure Prisma migrations are applied (`npm run prisma:migrate` / `npm run prisma:push`) before running the server.
 
-### 5. FieldMapping
+## Common Prisma queries (examples)
+See `src/services` and `src/helpers` for runtime usage. Examples:
 
-Individual field mappings with type information.
-
-```typescript
-model FieldMapping {
-  id              String   @id @default(cuid())
-  registeredOrgId String
-  objectName      String
-  sourceField     String
-  targetField     String
-  fieldType       String
-  isRequired      Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  registeredOrg   RegisteredOrg @relation(fields: [registeredOrgId], references: [id], onDelete: Cascade)
-}
-```
-
-**Use**: Detailed field-level mapping information
-
-**Example**:
-```json
-{
-  "id": "fieldmap123",
-  "registeredOrgId": "org123",
-  "objectName": "Account",
-  "sourceField": "Phone",
-  "targetField": "Phone__c",
-  "fieldType": "Phone",
-  "isRequired": false
-}
-```
-
----
-
-### 6. AuditLog
-
-Comprehensive audit trail of all operations.
-
-```typescript
-model AuditLog {
-  id        String   @id @default(cuid())
-  action    String
-  resource  String
-  details   Json?
-  ipAddress String?
-  userId    String?
-  createdAt DateTime @default(now())
-}
-```
-
-**Actions**: MIGRATION_STARTED, MIGRATION_COMPLETED, OBJECT_DEPLOYED, FIELD_CREATED, etc.
-
-**Use**: Track all system operations for compliance
-
-**Example**:
-```json
-{
-  "id": "audit123",
-  "action": "MIGRATION_STARTED",
-  "resource": "DataSchedule:a15xx000000001",
-  "details": {
-    "sourceOrg": "prod",
-    "targetOrg": "sandbox"
-  },
-  "ipAddress": "192.168.1.1",
-  "userId": "user123",
-  "createdAt": "2024-12-11T10:00:00Z"
-}
-```
-
----
-
-### 7. PermissionSet
-
-Permission set definitions.
-
-```typescript
-model PermissionSet {
-  id              String   @id @default(cuid())
-  name            String   @unique
-  description     String?
-  permissions     Json
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-```
-
-**Use**: Store permission set configurations
-
-**Example**:
-```json
-{
-  "id": "ps123",
-  "name": "CustomPermission",
-  "description": "Custom permissions for admins",
-  "permissions": {
-    "viewAllRecords": true,
-    "editAllRecords": true
-  }
-}
-```
-
----
-
-### 8. Profile
-
-Profile definitions.
-
-```typescript
-model Profile {
-  id              String   @id @default(cuid())
-  name            String   @unique
-  description     String?
-  permissions     Json
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-```
-
-**Use**: Store profile configurations
-
-**Example**:
-```json
-{
-  "id": "prof123",
-  "name": "Admin",
-  "description": "Administrator profile",
-  "permissions": {
-    "viewSetup": true,
-    "manageUsers": true
-  }
-}
-```
-
----
-
-## Relationships Diagram
-
-```
-RegisteredOrg (1) ──────── (N) DataMigration (sourceOrg)
-RegisteredOrg (1) ──────── (N) DataMigration (targetOrg)
-RegisteredOrg (1) ──────── (N) FieldMapping
-
-DataMigration (1) ──────── (N) MigrationLog
-DataMigration (1) ──────── (N) ObjectMapping
-```
-
----
-
-## Indexes
-
-For performance optimization, the following indexes are created:
-
-- `RegisteredOrg.domainName` (UNIQUE)
-- `DataMigration.dataScheduleId` (UNIQUE)
-- `DataMigration.status`
-- `DataMigration.sourceOrgId`
-- `DataMigration.targetOrgId`
-- `MigrationLog.dataMigrationId`
-- `MigrationLog.objectName`
-- `ObjectMapping.dataMigrationId`
-- `FieldMapping.registeredOrgId`
-- `FieldMapping.objectName`
-- `AuditLog.action`
-- `AuditLog.createdAt`
-
----
-
-## Common Queries
-
-### Get Migration History
-
-```typescript
-const migrations = await prisma.dataMigration.findMany({
-  where: { sourceOrgId: "org123" },
-  include: {
-    migrationLogs: true,
-    objectMappings: true,
-  },
-  orderBy: { createdAt: 'desc' },
-  take: 10,
-});
-```
-
-### Get Migration Details with Logs
-
-```typescript
+```ts
 const migration = await prisma.dataMigration.findUnique({
   where: { dataScheduleId: "schedule_id" },
-  include: {
-    sourceOrg: true,
-    targetOrg: true,
-    migrationLogs: {
-      orderBy: { createdAt: 'desc' },
-    },
-  },
-});
-```
-
-### Get Audit Trail
-
-```typescript
-const auditLog = await prisma.auditLog.findMany({
-  where: { action: "MIGRATION_COMPLETED" },
-  orderBy: { createdAt: 'desc' },
-  take: 100,
-});
-```
-
-### Get Object Mappings
-
-```typescript
-const mappings = await prisma.objectMapping.findMany({
-  where: { dataMigrationId: "mig123" },
-  include: { dataMigration: true },
+  include: { sourceOrg: true, targetOrg: true, migrationLogs: true },
 });
 ```
 
 ---
 
-## Data Migration Steps
-
-1. **Create RegisteredOrg** entries for source and target
-2. **Create DataMigration** record to track the job
-3. **Create ObjectMapping** entries for each object
-4. **Create FieldMapping** entries for each field
-5. **Update MigrationLog** as data is processed
-6. **Create AuditLog** entries for tracking
-7. **Update DataMigration.status** when complete
+If you want a line-by-line mapping of every `db.collection("X")` used in the legacy server to the exact Prisma model, I can generate that next.
 
 ---
 

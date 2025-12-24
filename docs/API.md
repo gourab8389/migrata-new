@@ -281,42 +281,27 @@ All responses follow a standard format:
 
 ### 7. External ID Endpoints
 
-#### Check External ID Status
-- **Endpoint**: `POST /ext-id/check-status`
-- **Description**: Check if external ID field exists
-- **Request Body**:
-```json
-{
-  "orgId": "org_id",
-  "objectName": "Account",
-  "extIdField": "ExternalId__c"
-}
-```
+Endpoints for creating, updating and checking Migrata external ID fields are exposed under `/migrata-ext-id`.
+
+#### Create External ID Field (console)
+- **Endpoint**: `GET /migrata-ext-id/console-org/create`
+- **Description**: Start creating external ID fields for the console org (async). Returns a result URL.
 
 #### Create External ID Field
-- **Endpoint**: `POST /ext-id/create-field`
-- **Description**: Create external ID field on object
-- **Request Body**:
-```json
-{
-  "orgId": "org_id",
-  "objectName": "Account",
-  "fieldName": "ExternalId__c",
-  "label": "External ID"
-}
-```
+- **Endpoint**: `POST /migrata-ext-id/create` (also supported via `GET` for legacy compatibility)
+- **Description**: Start creation for source/target orgs using `dataScheduleId` query param. Response includes a `resultUrl` to check progress.
+
+#### Update External ID Values
+- **Endpoint**: `POST /migrata-ext-id/update` (also supported via `GET`)
+- **Description**: Start background job to populate external ID values for a given `dataScheduleId`.
 
 #### Delete External ID Field
-- **Endpoint**: `POST /ext-id/delete-field`
-- **Description**: Delete external ID field
-- **Request Body**:
-```json
-{
-  "orgId": "org_id",
-  "objectName": "Account",
-  "fieldName": "ExternalId__c"
-}
-```
+- **Endpoint**: `POST /migrata-ext-id/delete` (also supported via `GET`)
+- **Description**: Start deletion of external ID fields for the schedule. Response includes a `resultUrl`.
+
+#### Check External ID Status
+- **Endpoint**: `GET /migrata-ext-id/status`
+- **Description**: Query the log for status/result. Use `?dataScheduleId=...`.
 
 ---
 
