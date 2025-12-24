@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import authRoutes from './auth';
+import { csrfProtection } from '../../../middlewares/antiCSRFValidator';
 import migrateDataRoutes from './migrate-data';
 import metadataRoutes from './metadata';
 import fieldDifferenceRoutes from './field-difference';
@@ -17,7 +18,7 @@ import getExtraChildRecordsRoutes from './getExtraChildRecordsInTargetOrg';
 
 const router = Router();
 
-router.use('/auth', authRoutes);
+router.use('/auth', csrfProtection, authRoutes);
 router.use('/migrate-data', migrateDataRoutes);
 router.use('/logs', logsRoutes);
 router.use('/migrata-ext-id', migrationExtIdRoutes);
@@ -31,9 +32,8 @@ router.use('/field-difference-sse', fieldDifferenceSSERoutes);
 router.use('/sync-records', syncRecordsRoutes);
 router.use('/trigger-operation', triggerOperationRoutes);
 router.use('/diff-viewer', diffViewerRoutes);
-router.use('/diffViewer', diffViewerRoutes); // Alias for old casing
+// router.use('/diffViewer', diffViewerRoutes);
 router.use('/getExtraChildRecordsInTargetOrg', getExtraChildRecordsRoutes);
-router.use('/getExtraChildRecordsInTargetOrg', getExtraChildRecordsRoutes); // Alias for old casing (same as new, but explicit)
 
 router.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', timestamp: new Date() });
