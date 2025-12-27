@@ -34,7 +34,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // ===== ROUTES =====
-// Mount centralized routes (keeps parity with migrata-demo2)
 app.use('/', routes as any);
 
 // 404 handler

@@ -6,7 +6,6 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 const startServer = async () => {
   try {
-    // Test database connection
     await prisma.$connect();
     console.log('✓ Database connection successful');
 
